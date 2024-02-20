@@ -307,4 +307,3 @@ def get_movielens_dataset(variant='100K'):
     url = 'movielens_{}'.format(variant)
 
     return Interactions(*_get_movielens(url))
-# test colab
