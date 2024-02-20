@@ -1,0 +1,328 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\PassOptionsToPackage{usenames,dvipsnames}{color}  %% Allow color names
+\usepackage{xcolor}
+\usepackage{framed}        % enable shading
+\usepackage[hyphens]{url}  % wrap urls across lines, breaking by hyphens
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{float}         % keep figures in order
+\usepackage{graphicx}      % allow graphics/figures
+\usepackage{sectsty}       % set section header font sizes
+\usepackage[compact]{titlesec}  % set skip after sections
+\usepackage[shortlabels]{enumitem}
+\usepackage{wrapfig}
+\usepackage{caption}
+\usepackage{amsfonts, amsmath}
+\usepackage{xspace}
+\newtheorem{definition}{Definition}
+
+\usepackage{tikz}
+\usetikzlibrary{bayesnet}
+\usetikzlibrary{arrows}
+
+\geometry{margin=1in}
+
+% set up url
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
+
+\usepackage{tgpagella}
+
+% color to shade with
+\definecolor{shadecolor}{gray}{0.9}
+
+ %put box around figure captions
+\makeatletter
+\long\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip
+  \sbox\@tempboxa{\fbox{#1: #2}}%
+  \ifdim \wd\@tempboxa >\hsize
+    \fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{#1: #2}}\par
+  \else
+    \global \@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi
+  \vskip\belowcaptionskip}
+\makeatother
+
+%no indent and modify distance between paragraphs
+\setlength\parindent{0pt}
+\setlength\parskip{12pt}
+
+% Reduce spacing after section headers
+\titlespacing{\section}{0pt}{*1}{*0}
+\titlespacing{\subsection}{0pt}{*1}{*0}
+\titlespacing{\subsubsection}{0pt}{*0}{*0}
+
+
+% KL Divergence command
+\newcommand{\kld}[2]{D_{\mathrm{KL}} \left( \left. \left. #1 \right|\right| #2 \right) }
+
+\begin{document}
+
+\begin{center}
+{\Large \textbf{
+    CS 330 Autumn 2023 Homework 4 \\ 
+    Advanced Meta-Learning Topics} \\ 
+}
+\vspace{0.4cm}
+{\large Due Wednesday, November 15th, 11:59 PM PT }
+
+\begin{tabular}{rl}
+SUNet ID: &  \\
+Name: & \\
+Collaborators: & 
+\end{tabular}
+\end{center}
+By turning in this assignment, I agree by the Stanford honor code and declare that all of this is my own work.
+
+\subsection*{Overview}
+This assignment will explore three different advanced meta-learning topics.
+You will:
+\begin{enumerate}
+    \item Answer conceptual questions about whether memorization can occur in a few realistic meta-learning scenarios.
+    \item Derive an objective for a Bayesian meta-learning setting where, in addition to a dataset, metadata is available for all tasks.
+    \item Using provided code, run experiments comparing the computational costs of two different methods for learning initial parameters for a neural network.
+\end{enumerate}
+The first two problems are purely conceptual and involve no programming at all.
+For the last question, you will use provided scripts to run experiments and report the results.
+
+\textbf{Grading policy:} This assignment is \textit{optional}, and accounts for up to $15\%$ of your grade. Your grade for this homework will replace the grade of either one prior homework or part of the final project, whichever choice results in the highest final grade. Attempting this homework will therefore never harm your grade.
+
+\textbf{Submission:} To submit your homework, submit one PDF report to Gradescope containing answers to the questions below. The PDF should also include your name and any students you talked to or collaborated with.
+\textbf{Any written responses or plots to the questions below must appear in your PDF submission}.
+
+\textbf{Code Submission:} You are not required to submit code.
+
+
+\subsection*{Problem 1: Memorization in Meta-Learning (6 Points)}
+In this problem, we will examine four task distributions in a meta-learning problem setting to determine whether or not memorization can occur.
+We consider a meta-learning setting where each task consists of a labeled support set and a query set which the model must make predictions on.
+We adopt the notion of \textit{complete meta-learning memorization} from [1].
+A task distribution can suffer from complete memorization if a meta-learning algorithm can achieve perfect performance for all tasks in the meta-training set, solely based on the query set while ignoring the support set.
+
+For each of the following meta-learning task settings, answer \textbf{two questions} and explain your reasoning for each answer.
+First, state whether or not complete memorization can occur.
+Second, state whether the performance on meta-test tasks will be (1) equal or worse than random guessing (2) worse than meta-train but better than random guessing (3) as good as meta-train.
+For each of these two questions, explain your reasoning in one or two sentences.
+You are not required to provide a formal mathematical proof.
+
+{
+\color{gray}
+Note: some of these questions may have multiple plausible answers depending on how you interpret the scenario and what additional assumptions you make.
+Explicitly state the problem setup you are considering, including any additional assumptions.
+Any reasonable and logically consistent answer will receive a full grade.
+}
+
+\begin{enumerate}[label=(\alph*)]
+\item \textbf{Regression tasks from basis functions.}
+Consider regression tasks where the input and output domains are $\mathcal{X} = \mathbb{R}$ and $\mathcal{Y} = \mathbb{R}$, respectively.
+Each task contains $10$ train and $10$ test datapoints, and is constructed from a finite set of basis functions $\phi_i: \mathbb{R} \rightarrow \mathbb{R}$ for $i \in \{1, \ldots, n\}$ that are linearly independent, i.e., there does not exist $w_1, \ldots, w_n$ such that $\sum_i w_i \phi_i = 0$.
+Let $p(w)$ be a distribution over $\mathbb{R}^n$. 
+Each task is constructed by sampling $w \sim p(w)$ and then using $x \mapsto \sum_i w_i \phi_i(x)$ as the ground-truth function, where the inputs $x$ are sampled from $\textrm{Unif}([0, 1])$.
+(2 points)
+
+{\color{red}
+Your two-part answer goes here.
+}
+
+\item \textbf{Medical image classification.}
+Consider a meta-learning dataset for medical imaging, where the goal is for a model to be able to recognize a novel disease given a small number of labeled cases.
+The input is a medical image, such as an X-ray or CT scan.
+The output is a binary label $y \in \{0, 1\}$ where $0$ represents a sample from a healthy person and $1$ represents a sample with a specific disease.
+Assume we have a large dataset of images corresponding to $N$ different diseases, where $N$ is a large number.
+To construct a meta-training task, we randomly sample one of the $N$ diseases, then sample $5$ healthy and $5$ diseased images.
+Meta-testing tasks are constructed similarly from images corresponding to a set of $M$ held-out diseases.
+(2 points)
+
+{\color{red}
+Your two-part answer goes here.
+}
+
+\item \textbf{Robotic grasping.}
+Consider a simplified robotic grasping task, where the goal is to predict the three-dimensional coordinates ($\in \mathbb{R}^3$) of a target object to grasp.
+The robot is a movable arm firmly attached to a desk.
+Many different objects are placed on the desk, and each task consists of grasping a specific object. The meta-testing tasks correspond to held-out objects on the desk.
+The input is an image that shows everything in the robot's field of view, including multiple objects on a desk and a computer monitor.
+The target object for each task is written on a computer monitor, inside the camera's field of view.
+As task-specific adaptation, the robot is allowed $K=5$ attempts to predict the grasp location; i.e. the support set includes $5$ grasp attempts.
+During each attempt, the robot makes object coordinate predictions and receives a reward signal based on how close its prediction was to the object.
+At meta-test time, we test the robot on novel objects with the monitor turned off, and measure the average grasping success rate after the initial $5$ trials.
+(2 points)
+
+{\color{red}
+Your two-part answer goes here.
+}
+
+\end{enumerate}
+
+
+\subsection*{Problem 2: Bayesian Meta-Learning (4 Points)}
+In this problem, we consider a Bayesian black-box meta-learning method with observable task metadata as side information.
+The novel component in our setup is \textit{task metadata} which succinctly summarizes aspects of each task.
+We assume that $m$ is available for all tasks.
+
+Our probabilistic model involves two latent variables $\phi_1 \in \mathbb{R}^D$ and $\phi_2 \in \mathbb{R}^D$ and an observable task metadata variable $m \in \mathbb{R}^D$.
+We assume a prior $p(\phi_1)$ over the top-level variable, and that $\phi_2$ is sampled according to the conditional distribution $p(\phi_1 | \phi_2, m)$.
+The label corresponding to an example $x$ is predicted as $p(y | \phi_2, x)$.
+We use networks $q(\phi_2 | x_{1:N}, y_{1:N})$ and $q(\phi_1 | \phi_2, m)$ to perform amortized inference of the two hidden variables $\phi_1$ and $\phi_2$.
+
+\begin{enumerate}[label=(\alph*)]
+\item 
+Draw a plate notation diagram for this model.
+Your diagram should include all variables $\theta, \phi_1, \phi_2, x, y, m$ with appropriate node colors reflecting whether each node is hidden or observable, and plates representing the $T$ tasks and $N$ datapoints in each task.
+You can hand-draw a diagram or modify the provided \texttt{tikz} diagram for a simpler black-box Bayesian meta-learning model (Figure \ref{fig:plate_np}).
+(1 points)
+
+\textcolor{red}{
+Your diagram goes here.
+}
+
+
+\begin{figure} \centering
+\tikz{
+    % Nodes. Syntax: [options] (name) {text};
+    \node[obs] (x) {$x$};%
+    \node[obs,left=of x] (y) {$y$}; %
+    \node[latent, above=of y,xshift=0cm] (phi) {$\phi$}; %
+    \node[above=of phi,xshift=0cm] (theta) {$\theta$}; %
+    % Edges. Syntax: {out_node} {in_node};
+    \edge {x} {y}; %
+    \edge {phi} {y}; %
+    \edge {theta} {phi}; %
+    % Plates. Syntax: [options] {name} {(nodes)(to)(include)} {text};
+    \plate [inner sep=.25cm,yshift=.1cm] {plate1} {(x)(y)} {$N$}; %
+    \plate [inner sep=.35cm,yshift=.2cm] {plate2} {(x)(y)(phi)(plate1)} {$T$}; %
+}
+\caption{ \label{fig:plate_np}
+Plate notation diagram of a simple black-box Bayesian meta-learning model.}
+\end{figure}
+
+\item 
+Complete the following derivation of an evidence lower bound (ELBO) for this model, given the dataset $(x_{1:N}, y_{1:N})$ and metadata $m$ from each task.
+Your derivation can use standard lemmas such as Jensen's inequality without proof.
+(3 points)
+\end{enumerate}
+
+{ \color{gray}
+Hint: introducing new symbols such as $X=x_{1:N}$ and $Y=y_{1:N}$ can simplify your equations.
+}
+
+\textcolor{red}{
+Your derivation goes here, and should likely start with something like:
+\begin{align}
+  \log p(y_{1:N} | x_{1:N}, m) \geq \ldots
+\end{align}
+}
+
+
+\subsection*{Problem 3: Scaling of Meta-Learning Algorithms (5 Points)}
+In this problem, you will investigate how the computational costs, both runtime and memory usage, of two meta-learning algorithms scale with different hyperparameters.
+We will consider Model-Agnostic Meta-Learning (MAML) and Evolution Strategies (ES).
+Understanding the computational behavior of these algorithms is important for understanding their practicality in real-world applications, where computational resources are often a limiting factor.
+
+Your primary objective is to profile the computational costs of MAML and ES under different hyperparameter configurations.
+You will be provided with code to run the experiments.
+We will not be considering the actual performance of the meta-learning methods; we will focus exclusively on their computational costs.
+To measure the computational costs with the provided code, \textbf{you must run the experiments on a GPU}, since we use total allocated GPU memory as a proxy for memory usage.
+
+We will be using a simple 1D regression task, where the input and output are both scalars.
+Each task corresponds to a random sinusoidal function with a random phase, bias, and amplitude.
+The dataset for each task consists of $10$ training examples and $100$ test examples.
+The meta-learner is trained on many tasks of this type, and is expected to generalize to new tasks by learning a good initialization for model parameters which quickly adapts to new tasks based on the $10$ training examples.
+The provided codebase automatically generates a random dataset for each task.
+The model is a fully-connected neural network, and the default architecture uses $2$ hidden layers of $128$ hidden units each.
+
+\newcommand{\dataset}{\mathcal{D}}
+\newcommand{\task}{\mathcal{T}}
+\newcommand{\supportdata}{\mathcal{D}^\mathrm{tr}}
+\newcommand{\querydata}{\mathcal{D}^\mathrm{ts}}
+\newcommand{\support}[1]{{#1}^\mathrm{tr}}
+\newcommand{\query}[1]{{#1}^\mathrm{ts}}
+
+We will be comparing two meta-learning methods: Model-Agnostic Meta-Learning (MAML) and Evolution Strategies (ES), which we briefly review here.
+We use either method to learn the initial parameters of a neural network that is then adapted to a new task using gradient descent.
+Denote the initial parameters as $\theta$, the adapted parameters as $\phi$, and the dataset for a task $\task_i$ as $\dataset_i = (\supportdata_i, \querydata_i)$.
+Inner-loop adaptation is performed by taking $L$ gradient descent steps on the support data $\supportdata_i$:
+\begin{align}
+    \phi^1 &= \phi^0 - \alpha \nabla_{\phi^0} \mathcal{L}(\phi^0, \supportdata_i) \nonumber \\
+    \phi^2 &= \phi^1 - \alpha \nabla_{\phi^1} \mathcal{L}(\phi^1, \supportdata_i) \nonumber \\
+    \vdots \nonumber \\
+    \phi^L &= \phi^{L-1} - \alpha \nabla_{\phi^{L-1}} \mathcal{L}(\phi^{L-1}, \supportdata_i).
+\end{align}
+In this assignment, both MAML and ES optimize the initial parameters $\theta=\phi^0$ by taking gradient steps with respect to the meta-objective:
+\begin{equation}
+    \mathcal{J}(\theta) = \mathbb{E}_{\task_i \sim p(\task), (\supportdata_i, \querydata_i) \sim \task_i} \left[ \mathcal{L}(\phi^L, \querydata_i) \right].
+\end{equation}
+The two methods differ in how they compute the meta-objective gradient $\nabla_\theta \mathcal{J}(\theta)$.
+MAML performs backpropagation through all $L$ unrolled inner-loop gradient steps: 
+\begin{align}
+  \nabla_\theta \mathcal{J}(\theta) 
+  &= \mathbb{E}_{\task_i \sim p(\task), (\supportdata_i, \querydata_i) \sim \task_i} \left[ \nabla_\theta \mathcal{L}(\phi^L, \querydata_i) \right] \nonumber \\
+  &= \mathbb{E}_{\task_i \sim p(\task), (\supportdata_i, \querydata_i) \sim \task_i} \left[ \nabla_\theta \mathcal{L}(\phi^{L-1} - \alpha \nabla_{\phi^{L-1}} \mathcal{L}(\phi^{L-1}, \supportdata_i), \querydata_i) \right] \nonumber \\
+  &= \mathbb{E}_{\task_i \sim p(\task), (\supportdata_i, \querydata_i) \sim \task_i} \left[ \nabla_\theta \mathcal{L}(\phi^{L-2} - \alpha_{\phi^{L-2}} \cdots \right]
+\end{align}
+In contrast, ES uses a finite-difference estimator:
+\begin{equation}
+    \nabla_\theta \mathcal{J}(\theta) \approx \frac{1}{N} \sum_{i=1}^N \frac{\mathcal{J}(\theta + \epsilon \delta_i) - \mathcal{J}(\theta - \epsilon \delta_i)}{2 \epsilon} \delta_i,
+\end{equation}
+where $\delta_i$ is a random vector that has the same dimension as $\theta$ and is sampled from a standard normal distribution.
+This sort of finite-difference estimator is commonly used in evolutionary algorithms; its use for optimizing initial parameters has been explored in [2].
+In the context of this assignment, we are comparing the computational costs of unrolled backpropagation (MAML) and finite-difference estimation (ES) for the same optimization problem rather than comparing the performance of the two methods.
+
+We will be comparing the computational costs of MAML and ES while varying three hyperparameters:
+\begin{itemize}
+  \item \textbf{Inner steps:} the number of gradient descent steps to take on the support set.
+  \item \textbf{Layers:} the number of hidden layers in the model.
+  \item \textbf{Hidden units:} the number of hidden units per layer.
+\end{itemize}
+
+
+\begin{enumerate}[label=(\alph*)]
+  \item \textbf{Plots [2 points]}
+  Compare the runtime and memory cost of MAML and ES while varying the number of inner steps, layers, and hidden units.
+  Show results in six plots, one for each combination of metric (runtime or memory) and experiment (inner steps, layers, hidden units).
+
+  {\color{red}
+  Your plots go here.
+  }
+  
+%%% Feel free to use this latex figure starter code:
+% \begin{figure}
+%     \centering
+%     \includegraphics{FIGURE_FILENAME.pdf}
+%     \caption{Experiment.}
+%     \label{fig:exp-name}
+% \end{figure}
+% 
+%%% You can point to the figure in text by writing Figure~\ref{fig:exp-name}
+
+
+  \item \textbf{Analysis [3 points]}
+  Comment on your plots, and explain the trends you observe. 
+  For which experiment do you see the largest qualitative difference between MAML and ES, and why do you think this is the case?
+
+  {\color{red}
+  Your analysis goes here.
+  }
+\end{enumerate}
+
+\subsection*{References}
+
+[1] 
+Mingzhang Yin, George Tucker, Mingyuan Zhou, Sergey Levine, Chelsea Finn.
+\textit{Meta-Learning without Memorization}
+\url{https://arxiv.org/abs/1912.03820}
+
+[2]
+Xingyou Song, Wenbo Gao, Yuxiang Yang, Krzysztof Choromanski, Aldo Pacchiano, Yunhao Tang
+\textit{ES-MAML: Simple Hessian-Free Meta Learning}
+\url{https://arxiv.org/abs/1910.01215}
+
+\end{document}
