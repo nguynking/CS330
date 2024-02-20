@@ -141,7 +141,8 @@ class MultiTaskNet(nn.Module):
         """
         U = Q = None
         ### START CODE HERE ###
-        
+        U = ScaledEmbedding(num_users, embedding_dim)
+        Q = ScaledEmbedding(num_items, embedding_dim)
         ### END CODE HERE ###
         return U, Q
     
@@ -179,7 +180,10 @@ class MultiTaskNet(nn.Module):
         """
         U_reg = Q_reg = U_fact = Q_fact = None
         ### START CODE HERE ###
-        
+        U_reg = ScaledEmbedding(num_users, embedding_dim)
+        Q_reg = ScaledEmbedding(num_items, embedding_dim)
+        U_fact = ScaledEmbedding(num_users, embedding_dim)
+        Q_fact = ScaledEmbedding(num_items, embedding_dim)
         ### END CODE HERE ###
         return U_reg, Q_reg, U_fact, Q_fact
     
@@ -203,7 +207,7 @@ class MultiTaskNet(nn.Module):
         B = None
         ### START CODE HERE ###
         # Item bias terms (Matrix Factorization Only)
-
+        B = ZeroEmbedding(num_items, 1)
         ### END CODE HERE ###
         return B
     
@@ -226,9 +230,13 @@ class MultiTaskNet(nn.Module):
         mlp_layers = None
         ### START CODE HERE ###
         # MLP layer for regression task
-        
+        mlp_layers = nn.ModuleList()
+        for fan_in, fan_out in zip(layer_sizes, layer_sizes[1:]):
+            mlp_layers.append(nn.Linear(fan_in, fan_out))
+            mlp_layers.append(nn.ReLU())
 
         # Add final linear layer to the network
+        mlp_layers.append(nn.Linear(layer_sizes[-1], 1))
 
         ### END CODE HERE ###
         return mlp_layers
@@ -239,12 +247,17 @@ class MultiTaskNet(nn.Module):
         """
         predictions = score = None
         ### START CODE HERE ###
-        
-
+        user_embed = self.U(user_ids) # (batch, embed)
+        item_embed = self.Q(item_ids) # (batch, embed)
         # Regression head
-        
+        score = torch.cat((user_embed, item_embed, user_embed * item_embed), 1)
+        for l in self.mlp_layers:
+            score = l(score)
+        score = score.squeeze(1)
+        # print(f'score shape: {score.shape}')
 
-        # Matrix Factorization Head  
+        # Matrix Factorization Head
+        predictions = ((user_embed * item_embed).sum(1, keepdim=True) + self.B(item_ids)).squeeze(1) # (batch,)
 
         ### END CODE HERE ###
         return predictions, score
@@ -254,13 +267,19 @@ class MultiTaskNet(nn.Module):
         Please see forward() docstrings for reference
         """
         predictions = score = None
-        ### START CODE HERE ###
-        
+        ### START CODE HERE ###t
+        user_embed_reg, user_embed_fact = self.U_reg(user_ids), self.U_fact(user_ids)
+        item_embed_reg, item_embed_fact = self.Q_reg(item_ids), self.Q_fact(item_ids)
 
         # Regression head
-        
+        score = torch.cat((user_embed_reg, item_embed_reg, user_embed_reg * item_embed_reg), 1)
+        for l in self.mlp_layers:
+            score = l(score)
+        score = score.squeeze(1)
+        # print(f'score shape: {score.shape}')
 
-        # Matrix Factorization Head 
+        # Matrix Factorization Head
+        predictions = ((user_embed_fact * item_embed_fact).sum(1, keepdim=True) + self.B(item_ids)).squeeze(1) # (batch,)
 
         ### END CODE HERE ###
         return predictions, score
