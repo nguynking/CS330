@@ -1,6 +1,7 @@
 import torch
 from torch import nn, Tensor
 import torch.nn.functional as F
+from torch.nn.modules.distance import PairwiseDistance
 
 
 def initialize_weights(model):
@@ -38,13 +39,16 @@ class MANN(nn.Module):
         ### START CODE HERE ###
 
         # Step 1: Concatenate the full (support & query) set of labels and images
-
+        x = torch.cat([input_images, input_labels], dim=-1).float() # (B, K+1, N, 784 + N)
         # Step 2: Zero out the labels from the concatenated corresponding to the query set
-
+        x[:, -1, :, 784:] = torch.zeros_like(input_labels)[:, -1]
         # Step 3: Pass the concatenated set sequentially to the memory-augmented network
+        support = x.reshape(-1, self.num_classes, self.num_classes + 784)
+        out, (h_n, c_n) = self.layer1(support)
+        out, (h_n, c_n) = self.layer2(out, (h_n, c_n))
 
         # Step 3: Return the predictions with [B, K+1, N, N] shape
-
+        return out.reshape(input_labels.shape)
         ### END CODE HERE ###
 
     def loss_function(self, preds, labels):
@@ -69,9 +73,10 @@ class MANN(nn.Module):
         ### START CODE HERE ###
 
         # Step 1: extract the predictions for the query set
-
+        query_preds = preds[:, -1].reshape(-1, self.num_classes)
         # Step 2: extract the true labels for the query set and reverse the one hot-encoding  
-
+        query_labels = torch.argmax(labels[:, -1], dim=2).reshape(-1)
         # Step 3: compute the Cross Entropy Loss for the query set only!
+        loss = F.cross_entropy(query_preds, query_labels)
         ### END CODE HERE ###
         return loss
