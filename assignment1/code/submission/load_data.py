@@ -137,22 +137,36 @@ class DataGenerator(IterableDataset):
         ### START CODE HERE ###
 
         # Step 1: Sample N (self.num_classes in our case) different characters folders 
-        
+        paths = random.sample(self.folders, self.num_classes)
+
         # Step 2: Sample and load K + 1 (self.self.num_samples_per_class in our case) images per character together with their labels preserving the order!
         # Use our get_images function defined above.
         # You should be able to complete this with only one call of get_images(...)!
         # Please closely check the input arguments of get_images to understand how it works.
-
+        labels_and_images = get_images(paths, np.arange(self.num_classes), num_samples=self.num_samples_per_class)
+        
         # Step 3: Iterate over the sampled files and create the image and label batches
-
         # Make sure that we have a fixed order as pictured in the assignment writeup
         # Use our image_file_to_array function defined above.
+        label_one_hot = np.eye(self.num_classes, dtype=int)
+        image_batch = np.empty((self.num_samples_per_class, self.num_classes, self.dim_input))
+        label_batch = np.empty((self.num_samples_per_class, self.num_classes, self.num_classes))
+
+        for i, (label, image_path) in enumerate(labels_and_images):
+            i %= self.num_samples_per_class
+            image = self.image_file_to_array(image_path, self.dim_input) # (784,)
+            image_batch[i, label] = image
+            label_batch[i, label] = label_one_hot[label]
         
         # Step 4: Shuffle the order of examples from the query set
-        
+        query = np.concatenate((image_batch[-1], label_batch[-1]), axis=1) # (N, 784 + N)
+        np.random.shuffle(query)
 
         # Step 5: return tuple of image batch with shape [K+1, N, 784] and
         #         label batch with shape [K+1, N, N]
+        image_batch[-1] = query[:, :self.dim_input]
+        label_batch[-1] = query[:, self.dim_input:]
+        return (image_batch, label_batch)
         ### END CODE HERE ###
 
     def __iter__(self):
