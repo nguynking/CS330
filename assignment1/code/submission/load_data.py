@@ -140,34 +140,64 @@ class DataGenerator(IterableDataset):
 
         # Step 1: Sample N (self.num_classes in our case) different characters folders 
         paths = random.sample(self.folders, self.num_classes)
+        labels = np.eye(self.num_classes)
 
-        # Step 2: Sample and load K + 1 (self.self.num_samples_per_class in our case) images per character together with their labels preserving the order!
-        # Use our get_images function defined above.
-        # You should be able to complete this with only one call of get_images(...)!
-        # Please closely check the input arguments of get_images to understand how it works.
-        labels_and_images = get_images(paths, np.arange(self.num_classes), num_samples=self.num_samples_per_class)
+        # Support
+        support_labels_images = get_images(paths, labels, num_samples=self.num_samples_per_class-1, shuffle=False)
+        support_images = np.vstack([self.image_file_to_array(filename=item[1], dim_input=self.dim_input)
+                                    for item in support_labels_images]).reshape(self.num_classes,
+                                                                                self.num_samples_per_class-1,
+                                                                                784) # (N, K, 784)
+        support_images = np.moveaxis(support_images, [0, 1, 2], [1, 0, 2]) # (K, N, 784)
+        # print(f'support_labels.shape: {np.vstack([item[0] for item in support_labels_images]).shape}')
+        support_labels = np.vstack([item[0] for item in support_labels_images]).reshape(self.num_classes,
+                                                                                        self.num_samples_per_class-1,
+                                                                                        self.num_classes) # (N, K, 784)
+        support_labels = np.moveaxis(support_labels, [0, 1, 2], [1, 0, 2]) # (K, N, 784)
+
+        # Query
+        query_labels_images = get_images(paths, labels, num_samples=1, shuffle=True)
+        query_images = np.vstack([self.image_file_to_array(filename=item[1], dim_input=self.dim_input)
+                                  for item in query_labels_images]).reshape(self.num_classes,
+                                                                            1,
+                                                                            784) # (N, 1, 784)
+        query_images = np.moveaxis(query_images, [0, 1, 2], [1, 0, 2]) # (1, N, 784)
+        # print(f'query_labels.shape: np.vstack([item[0] for item in query_labels_images]).shape')
+        query_labels = np.vstack([item[0] for item in query_labels_images]).reshape(self.num_classes,
+                                                                                    1,
+                                                                                    self.num_classes) # (N, 1, 784)
+        query_labels = np.moveaxis(query_labels, [0, 1, 2], [1, 0, 2]) # (1, N, 784)
+
+        image_batch = np.concatenate([support_images, query_images], axis=0)
+        label_batch = np.concatenate([support_labels, query_labels], axis=0)
+
+        # # Step 2: Sample and load K + 1 (self.self.num_samples_per_class in our case) images per character together with their labels preserving the order!
+        # # Use our get_images function defined above.
+        # # You should be able to complete this with only one call of get_images(...)!
+        # # Please closely check the input arguments of get_images to understand how it works.
+        # labels_images = get_images(paths, np.arange(self.num_classes), num_samples=self.num_samples_per_class)
         
-        # Step 3: Iterate over the sampled files and create the image and label batches
-        # Make sure that we have a fixed order as pictured in the assignment writeup
-        # Use our image_file_to_array function defined above.
-        label_one_hot = np.eye(self.num_classes, dtype=int)
-        image_batch = np.empty((self.num_samples_per_class, self.num_classes, self.dim_input))
-        label_batch = np.empty((self.num_samples_per_class, self.num_classes, self.num_classes))
+        # # Step 3: Iterate over the sampled files and create the image and label batches
+        # # Make sure that we have a fixed order as pictured in the assignment writeup
+        # # Use our image_file_to_array function defined above.
+        # label_one_hot = np.eye(self.num_classes, dtype=int)
+        # image_batch = np.empty((self.num_samples_per_class, self.num_classes, self.dim_input))
+        # label_batch = np.empty((self.num_samples_per_class, self.num_classes, self.num_classes))
 
-        for i, (label, image_path) in enumerate(labels_and_images):
-            i %= self.num_samples_per_class
-            image = self.image_file_to_array(image_path, self.dim_input) # (784,)
-            image_batch[i, label] = image
-            label_batch[i, label] = label_one_hot[label]
+        # for i, (label, image_path) in enumerate(labels_images):
+        #     i %= self.num_samples_per_class
+        #     image = self.image_file_to_array(image_path, self.dim_input) # (784,)
+        #     image_batch[i, label] = image
+        #     label_batch[i, label] = label_one_hot[label]
         
-        # Step 4: Shuffle the order of examples from the query set
-        query = np.concatenate((image_batch[-1], label_batch[-1]), axis=1) # (N, 784 + N)
-        np.random.shuffle(query)
+        # # Step 4: Shuffle the order of examples from the query set
+        # query = np.concatenate((image_batch[-1], label_batch[-1]), axis=1) # (N, 784 + N)
+        # np.random.shuffle(query)
 
-        # Step 5: return tuple of image batch with shape [K+1, N, 784] and
-        #         label batch with shape [K+1, N, N]
-        image_batch[-1] = query[:, :self.dim_input]
-        label_batch[-1] = query[:, self.dim_input:]
+        # # Step 5: return tuple of image batch with shape [K+1, N, 784] and
+        # #         label batch with shape [K+1, N, N]
+        # image_batch[-1] = query[:, :self.dim_input]
+        # label_batch[-1] = query[:, self.dim_input:]
         return (image_batch, label_batch)
         ### END CODE HERE ###
 
