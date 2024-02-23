@@ -37,18 +37,20 @@ class MANN(nn.Module):
         """
         #############################
         ### START CODE HERE ###
-
         # Step 1: Concatenate the full (support & query) set of labels and images
-        x = torch.cat([input_images, input_labels], dim=-1).float() # (B, K+1, N, 784 + N)
+        x = torch.cat([input_images, input_labels], dim=-1) # (B, K+1, N, 784 + N)
+
         # Step 2: Zero out the labels from the concatenated corresponding to the query set
         x[:, -1, :, 784:] = torch.zeros_like(input_labels)[:, -1]
+
         # Step 3: Pass the concatenated set sequentially to the memory-augmented network
-        support = x.reshape(-1, self.num_classes, self.num_classes + 784)
-        out, (h_n, c_n) = self.layer1(support)
-        out, (h_n, c_n) = self.layer2(out, (h_n, c_n))
+        support = x.reshape(-1, self.num_classes, self.num_classes + 784).float()
+        out, _ = self.layer1(support)
+        out, _ = self.layer2(out)
 
         # Step 3: Return the predictions with [B, K+1, N, N] shape
         return out.reshape(input_labels.shape)
+
         ### END CODE HERE ###
 
     def loss_function(self, preds, labels):
