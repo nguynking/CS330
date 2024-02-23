@@ -7,7 +7,7 @@ import time
 import imageio
 
 
-def get_images(paths, labels, num_samples=None):
+def get_images(paths, labels, num_samples=None, shuffle=False):
     """
     Takes a set of character folders and labels and returns paths to image files
     paired with labels.
@@ -27,6 +27,8 @@ def get_images(paths, labels, num_samples=None):
         for i, path in zip(labels, paths)
         for image in sampler(os.listdir(path))
     ]
+    if shuffle:
+        random.shuffle(labels_and_images)
 
     return labels_and_images
 
