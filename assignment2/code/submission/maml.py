@@ -180,7 +180,7 @@ class MAML:
             k: torch.clone(v)
             for k, v in self._meta_parameters.items()
         }
-        gradients = None
+        gradients = []
         ### START CODE HERE ###
         # TODO: finish implementing this method.
         # This method computes the inner loop (adaptation) procedure
@@ -189,8 +189,25 @@ class MAML:
         # Make sure to populate accuracies and update parameters.
         # Use F.cross_entropy to compute classification losses.
         # Use util.score to compute accuracies.
-        
+        for step in range(self._num_inner_steps):
+            logits = self._forward(images, parameters)
+            loss = F.cross_entropy(logits, labels)
+            gradients = torch.autograd.grad(loss, parameters.values(), create_graph=train)
+            for grad in gradients:
+                grad = grad if train else grad.detach()
 
+            with torch.no_grad():
+                accuracy = util.score(logits, labels)
+                accuracies.append(accuracy)
+            
+            # Update parameters using gradient descent
+            parameters = {k: v - self._inner_lrs[k] * g for (k, v), g in zip(parameters.items(), gradients)}
+        
+        logits = self._forward(images, parameters)
+        loss = F.cross_entropy(logits, labels)
+        with torch.no_grad():
+            accuracy = util.score(logits, labels)
+            accuracies.append(accuracy)
         ### END CODE HERE ###
         return parameters, accuracies, gradients
 
@@ -229,6 +246,17 @@ class MAML:
             # Make sure to populate outer_loss_batch, accuracies_support_batch,
             # and accuracy_query_batch.
             # support accuracy: The first element (index 0) should be the accuracy before any steps are taken.
+
+            # Adapt parameters using the support set
+            adapted_params, accuracies_support, _ = self._inner_loop(images_support, labels_support, train)
+            accuracies_support_batch.append(accuracies_support)
+
+            # Evaluate on the query set
+            logits_query = self._forward(images_query, adapted_params)
+            loss_query = F.cross_entropy(logits_query, labels_query)
+            outer_loss_batch.append(loss_query)
+            accuracy_query = util.score(logits_query, labels_query)
+            accuracy_query_batch.append(accuracy_query)
             
             ### END CODE HERE ###
         outer_loss = torch.mean(torch.stack(outer_loss_batch))
