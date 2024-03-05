@@ -152,19 +152,39 @@ class ProtoNet:
             # accuracy_query_batch.
 
             # compute prototypes without tracking gradients
-                # Generate support features
-
-                # Calculate prototypes from features
-
-                # Calculate features for support
-                
+            # Generate support features
+            support_features = self._network(images_support)
+            # Calculate prototypes from features
+            prototypes = []
+            for label in torch.unique(labels_support):
+                mask = labels_support == label
+                prototype = support_features[mask].mean(0)
+                prototypes.append(prototype)
+            prototypes = torch.stack(prototypes)
+            # Calculate features for support
 
             # Generate query features
-            
+            query_features = self._network(images_query)
             # Calculate probabilities
-            
+            # print(f'support_features: {support_features.shape}')
+            # print(f'labels_support: {labels_support.shape}')
+            # print(f'query_features: {query_features.shape}')
+            # print(f'labels_query: {labels_query.shape}')
+            # print(f'prototypes: {prototypes.shape}')
+            support_distances = -torch.cdist(support_features, prototypes)
+            query_distances = -torch.cdist(query_features, prototypes)
+
+            # print(f'support_distances: {support_distances[:2]}')
+            # print(f'query_distances: {query_distances[:2]}')
 
             # Compute loss
+            loss = F.cross_entropy(query_distances, labels_query)
+            accuracy_support = util.score(support_distances, labels_support)
+            accuracy_query = util.score(query_distances, labels_query)
+
+            loss_batch.append(loss)
+            accuracy_support_batch.append(accuracy_support)
+            accuracy_query_batch.append(accuracy_query)
             
             ### END CODE HERE ###
         return (
