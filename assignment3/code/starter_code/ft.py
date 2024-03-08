@@ -202,7 +202,7 @@ def get_acc(unnormalized_logits: torch.Tensor, targets: torch.Tensor) -> torch.T
         # This is the classification case.
         # Complete this for Q0.1
         preds = torch.argmax(unnormalized_logits, dim=1)
-        accuracy = (preds == targets).mean()
+        accuracy = (preds == targets).float().mean()
         # assert False, "Complete this for Q0.1"
     elif unnormalized_logits.dim() == 3:
         # This is the generation case.
