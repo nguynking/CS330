@@ -125,11 +125,11 @@ def get_dataset(dataset: str, n_train: int, n_val: int = 100):
         return d[:n_train], d[n_train : n_train + n_val]
     elif dataset == "amazon":
         # d = datasets.load_dataset("amazon_us_reviews", "Video_v1_00")["train"]
-        data_files = "data/amazon_reviews_us_Video_v1_00.csv"
+        data_files = "data/amazon_reviews_us_Video_v1_00.tsv"
         if not os.path.exists(data_files):
-            data_files = "starter_code/data/amazon_reviews_us_Video_v1_00.csv"
+            data_files = "starter_code/data/amazon_reviews_us_Video_v1_00.tsv"
         try:
-            d = datasets.load_dataset("csv", data_files=data_files)["train"]
+            d = datasets.load_dataset("csv", data_files=data_files, delimiter='\t', on_bad_lines='skip')["train"]
         except FileNotFoundError:
             print(
                 "PLEASE DOWNLOAD THE AMAZON DATASET FROM https://drive.google.com/file/d/1RLCPCEvJVTvUbn-D426Avwg6hynSBgU3/view?usp=sharing AND PLACE IT IN data/amazon_reviews_us_Video_v1_00.csv"

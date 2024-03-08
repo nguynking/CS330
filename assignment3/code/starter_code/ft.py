@@ -102,7 +102,8 @@ def parameters_to_fine_tune(model: nn.Module, mode: str) -> Iterable[nn.Paramete
     if mode == "all":
         # Every learnable parameter from `model` should be fine-tuned.
         # Complete this for Q0.1
-        assert False, "Complete this for Q0.1"
+        parameters_to_fine_tune = model.parameters()
+        # assert False, "Complete this for Q0.1"
     elif mode == "last":
         # Only fine tune the last 2 transformer blocks
         # Complete this for Q2.1
@@ -154,7 +155,8 @@ def get_loss(unnormalized_logits: torch.Tensor, targets: torch.Tensor) -> torch.
     if unnormalized_logits.dim() == 2:
         # This is the classification case.
         # Complete this for Q0.1
-        assert False, "Complete this for Q0.1"
+        loss = nn.functional.cross_entropy(unnormalized_logits, targets)
+        # assert False, "Complete this for Q0.1"
     elif unnormalized_logits.dim() == 3:
         # This is the generation case.
         # Remember that the target tensor may contain -100 values, which should be masked out
@@ -199,7 +201,9 @@ def get_acc(unnormalized_logits: torch.Tensor, targets: torch.Tensor) -> torch.T
     if unnormalized_logits.dim() == 2:
         # This is the classification case.
         # Complete this for Q0.1
-        assert False, "Complete this for Q0.1"
+        preds = torch.argmax(unnormalized_logits, dim=1)
+        accuracy = (preds == targets).mean()
+        # assert False, "Complete this for Q0.1"
     elif unnormalized_logits.dim() == 3:
         # This is the generation case.
         # Complete this for Q2.2d
