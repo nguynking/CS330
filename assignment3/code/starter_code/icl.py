@@ -99,7 +99,25 @@ def get_icl_prompts(
     )  # Your code should use this ordering!
 
     ### START CODE HERE ###
-    assert False, "Complete this for Q1.1a"
+    support_inputs = np.array(support_inputs)[permutation]
+    support_labels = np.array(support_labels)[permutation]
+
+    if prompt_mode == "babi":
+        prompt = " ".join(f"{inp} In the {label}." for inp, label in zip(support_inputs, support_labels))
+        prompt += f" {test_input} In the"
+
+    elif prompt_mode == "none":
+        prompt = " ".join(f"{inp} {label}" for inp, label in zip(support_inputs, support_labels))
+        prompt += f" {test_input}"
+
+    elif prompt_mode == "tldr":
+        prompt = " ".join(f"{inp} TL;DR: {label}" for inp, label in zip(support_inputs, support_labels))
+        prompt += f" {test_input} TL;DR:"
+
+    elif prompt_mode == "custom":
+        prompt = "\n\n".join(f"Article: {inp}\nSummarization: {label}" for inp, label in zip(support_inputs, support_labels))
+        prompt += f"\n\nArticle: {test_input}\nSummarization:"
+    # assert False, "Complete this for Q1.1a"
     ### END CODE HERE ###
 
     assert prompt[-1] != " "
@@ -181,7 +199,22 @@ def do_sample(
     sampled_tokens = []
     # Complete this for Q1.1b
     ### START CODE HERE ###
-    assert False, "Complete this for Q1.1b"
+    with torch.inference_mode():
+        past_key_values = None
+        for i in range(max_tokens):
+            outputs = model(input_ids, past_key_values=past_key_values, use_cache=True)
+            logits = outputs.logits
+            past_key_values = outputs.past_key_values
+
+            # Sample the next token
+            next_token = torch.argmax(logits[:, -1, :], dim=-1)
+            if next_token in stop_tokens:
+                break
+            
+            input_ids = next_token.unsqueeze(0)
+            sampled_tokens.append(next_token)
+            
+    # assert False, "Complete this for Q1.1b"
     ### END CODE HERE ###
     return sampled_tokens
 
@@ -245,7 +278,12 @@ def run_icl(
                             #   my_tensor.to(DEVICE), where DEVICE is defined at lines 32-35.
                             decoded_prediction = ""
                             # YOUR CODE HERE, complete for Q1.1c. Should be ~5-10 lines of code.
-                            assert False, "Complete this for Q1.1c"
+                            prompt = get_icl_prompt(support_x, support_y, test_input, prompt_mode=prompt_mode)
+                            input_ids, _ = tokenizer(prompt)
+                            input_ids.to(DEVICE)
+                            token_ids = do_sample(model, input_ids, stop_tokens, max_tokens)
+                            decoded_prediction = tokenizer.decode(token_ids)
+                            # assert False, "Complete this for Q1.1c"
                             # END YOUR CODE
 
                             predictions.append(decoded_prediction)
