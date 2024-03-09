@@ -278,7 +278,7 @@ def run_icl(
                             #   my_tensor.to(DEVICE), where DEVICE is defined at lines 32-35.
                             decoded_prediction = ""
                             # YOUR CODE HERE, complete for Q1.1c. Should be ~5-10 lines of code.
-                            prompt = get_icl_prompt(support_x, support_y, test_input, prompt_mode=prompt_mode)
+                            prompt = get_icl_prompts(support_x, support_y, test_input, prompt_mode=prompt_mode)
                             input_ids, _ = tokenizer(prompt)
                             input_ids.to(DEVICE)
                             token_ids = do_sample(model, input_ids, stop_tokens, max_tokens)
