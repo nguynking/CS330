@@ -208,11 +208,11 @@ def do_sample(
 
             # Sample the next token
             next_token = torch.argmax(logits[:, -1, :], dim=-1)
-            if next_token in stop_tokens:
+            if next_token.item() in stop_tokens:
                 break
             
             input_ids = next_token.unsqueeze(0)
-            sampled_tokens.append(next_token)
+            sampled_tokens.append(next_token.item())
             
     # assert False, "Complete this for Q1.1b"
     ### END CODE HERE ###
@@ -279,10 +279,11 @@ def run_icl(
                             decoded_prediction = ""
                             # YOUR CODE HERE, complete for Q1.1c. Should be ~5-10 lines of code.
                             prompt = get_icl_prompts(support_x, support_y, test_input, prompt_mode=prompt_mode)
-                            input_ids, _ = tokenizer(prompt)
-                            input_ids.to(DEVICE)
-                            token_ids = do_sample(model, input_ids, stop_tokens, max_tokens)
-                            decoded_prediction = tokenizer.decode(token_ids)
+                            input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(DEVICE)
+                            sampled_token_ids = do_sample(model, input_ids, stop_tokens, max_tokens)
+                            # print(f"input_ids shape: {input_ids.shape}")
+                            # print(f"token_ids shape: {len(token_ids)}")
+                            decoded_prediction = tokenizer.decode(sampled_token_ids, skip_special_tokens=True)
                             # assert False, "Complete this for Q1.1c"
                             # END YOUR CODE
 
