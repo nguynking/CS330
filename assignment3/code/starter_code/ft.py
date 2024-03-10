@@ -64,7 +64,10 @@ class LoRALayerWrapper(nn.Module):
         ###
         self.lora_A, self.lora_B = None, None
         ## YOUR CODE HERE, complete for Q2.2b
-        assert False, "Complete this for Q2.2b"
+        fan_in, fan_out = self.base_module.weight.shape
+        self.lora_A = nn.Parameter(torch.randn(fan_in, lora_rank) * 0.01)
+        self.lora_B = nn.Parameter(torch.zeros(fan_out, lora_rank))
+        # assert False, "Complete this for Q2.2b"
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         base_out = self.base_module(x)  # The output of the pre-trained module.
@@ -74,8 +77,8 @@ class LoRALayerWrapper(nn.Module):
         ###
 
         ## YOUR CODE HERE, complete for Q2.2b
-        assert False, "Complete this for Q2.2b"
-        pass
+        # assert False, "Complete this for Q2.2b"
+        return base_out + x @ self.lora_A @ self.lora_B.T
 
 
 def parameters_to_fine_tune(model: nn.Module, mode: str) -> Iterable[nn.Parameter]:
@@ -128,7 +131,14 @@ def parameters_to_fine_tune(model: nn.Module, mode: str) -> Iterable[nn.Paramete
         # Hint: consider using the `.modules()` function of nn.Module and checking for modules that
         # are an instance of LoRALayerWrapper.
         # Complete this for Q2.2c
-        assert False, "Complete this for Q2.2c"
+        # import pdb; pdb.set_trace()
+        parameters_to_fine_tune = [
+            p for m in model.modules()
+            if isinstance(m, LoRALayerWrapper)
+            for p in [m.lora_A, m.lora_B]
+        ]
+
+        # assert False, "Complete this for Q2.2c"
     else:
         raise ValueError(f"Unrecognized fine-tuning mode {mode}")
 
