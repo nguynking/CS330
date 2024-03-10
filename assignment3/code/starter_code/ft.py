@@ -107,15 +107,22 @@ def parameters_to_fine_tune(model: nn.Module, mode: str) -> Iterable[nn.Paramete
     elif mode == "last":
         # Only fine tune the last 2 transformer blocks
         # Complete this for Q2.1
-        assert False, "Complete this for Q2.1"
+        transformer_blocks = model.transformer.h
+        parameters_to_fine_tune = transformer_blocks[-2:].parameters()
+        # assert False, "Complete this for Q2.1"
     elif mode == "first":
         # Only fine tune the first 2 transformer blocks
         # Complete this for Q2.1
-        assert False, "Complete this for Q2.1"
+        transformer_blocks = model.transformer.h
+        parameters_to_fine_tune = transformer_blocks[:2].parameters()
+        # assert False, "Complete this for Q2.1"
     elif mode == "middle":
         # Only fine tune middle 2 transformer blocks
         # Complete this for Q2.1
-        assert False, "Complete this for Q2.1"
+        transformer_blocks = model.transformer.h
+        middle = len(transformer_blocks) // 2
+        parameters_to_fine_tune = transformer_blocks[middle - 1 : middle + 1].parameters()
+        # assert False, "Complete this for Q2.1"
     elif mode.startswith("lora"):
         # Only fine tune the rank decomposition matrices A and B from the LoRA layers.
         # Hint: consider using the `.modules()` function of nn.Module and checking for modules that
