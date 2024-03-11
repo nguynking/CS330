@@ -179,7 +179,14 @@ def get_loss(unnormalized_logits: torch.Tensor, targets: torch.Tensor) -> torch.
         # Remember that the target tensor may contain -100 values, which should be masked out
         # and that an off-by-one shift is needed between the logits and targets.
         # Complete this for Q2.2d
-        assert False, "Complete this for Q2.2d"
+        logits = unnormalized_logits[:, :-1].contiguous()
+        targets = targets[:, 1:].contiguous()
+
+        logits = logits.view(-1, logits.size(-1))
+        targets = targets.view(-1)
+
+        loss = nn.functional.cross_entropy(logits, targets, ignore_index=-100, reduction='mean')
+        # assert False, "Complete this for Q2.2d"
     else:
         raise ValueError(
             f"Logits should either be 2-dim (for classification) or 3-dim (for generation); got {unnormalized_logits.dim()}"
