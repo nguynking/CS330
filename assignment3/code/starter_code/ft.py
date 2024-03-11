@@ -231,7 +231,15 @@ def get_acc(unnormalized_logits: torch.Tensor, targets: torch.Tensor) -> torch.T
     elif unnormalized_logits.dim() == 3:
         # This is the generation case.
         # Complete this for Q2.2d
-        assert False, "Complete this for Q2.2d"
+        preds = torch.argmax(unnormalized_logits, dim=-1)[:, :-1]
+        tgts = targets[:, 1:]
+        mask = tgts != -100
+
+        valid_preds = preds[mask]
+        valid_tgts = tgts[mask]
+
+        accuracy = (valid_preds == valid_tgts).float().mean()
+        # assert False, "Complete this for Q2.2d"
     else:
         raise ValueError(
             f"Logits should either be 2-dim (for classification) or 3-dim (for generation); got {unnormalized_logits.dim()}"
@@ -342,7 +350,13 @@ def tokenize_gpt2_batch(
     """
     combined_sequences = None
     # YOUR CODE HERE, complete for Q2.2e
-    assert False, "Complete for Q2.2e"
+    # tokenizer_dict = tokenizer([x_ + y_ for x_, y_ in zip(x, y)], return_tensors='pt', padding=True)
+    # combined_sequences = {
+    #     'input_ids': tokenizer_dict['input_ids'],
+    #     'attention_mask': tokenizer_dict['attention_mask'],
+    #     'labels': torch.full()
+    # }
+    # assert False, "Complete for Q2.2e"
     return combined_sequences
 
 
