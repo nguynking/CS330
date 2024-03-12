@@ -65,8 +65,11 @@ class LoRALayerWrapper(nn.Module):
         self.lora_A, self.lora_B = None, None
         ## YOUR CODE HERE, complete for Q2.2b
         fan_in, fan_out = self.base_module.weight.shape
-        self.lora_A = nn.Parameter(torch.randn(fan_in, lora_rank) * 0.01)
-        self.lora_B = nn.Parameter(torch.zeros(fan_out, lora_rank))
+        self.lora_A = nn.Parameter(torch.empty(fan_in, lora_rank))
+        self.lora_B = nn.Parameter(torch.empty(fan_out, lora_rank))
+
+        torch.nn.init.kaiming_uniform_(self.lora_A)
+        torch.nn.init.zeros_(self.lora_B)
         # assert False, "Complete this for Q2.2b"
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -350,12 +353,17 @@ def tokenize_gpt2_batch(
     """
     combined_sequences = None
     # YOUR CODE HERE, complete for Q2.2e
-    # tokenizer_dict = tokenizer([x_ + y_ for x_, y_ in zip(x, y)], return_tensors='pt', padding=True)
-    # combined_sequences = {
-    #     'input_ids': tokenizer_dict['input_ids'],
-    #     'attention_mask': tokenizer_dict['attention_mask'],
-    #     'labels': torch.full()
-    # }
+    # combined_sequences = tokenizer([x_ + y_ for x_, y_ in zip(x, y)], return_tensors='pt', padding=True)
+    # tokenizer_y = tokenizer(y, return_tensors='pt', padding=True)
+
+    # combined_sequences['labels'] = torch.full_like(combined_sequences['attention_mask'], fill_value=-100)
+    # len_seq = combined_sequences['attention_mask'].sum(1)
+    # len_y = tokenizer_y['attention_mask'].sum(1)
+    # unmasked_token_y = tokenizer_y['input_ids'][tokenizer_y['attention_mask']]
+    
+    # for idx, tokenized_label in enumerate(combined_sequences['labels']):
+    #     tokenized_label[len_seq[idx]: len_seq[idx] + len_y[idx]] = unmasked_token_y[idx]
+
     # assert False, "Complete for Q2.2e"
     return combined_sequences
 
