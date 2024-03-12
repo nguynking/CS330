@@ -353,16 +353,15 @@ def tokenize_gpt2_batch(
     """
     combined_sequences = None
     # YOUR CODE HERE, complete for Q2.2e
-    # combined_sequences = tokenizer([x_ + y_ for x_, y_ in zip(x, y)], return_tensors='pt', padding=True)
-    # tokenizer_y = tokenizer(y, return_tensors='pt', padding=True)
+    combined_sequences = tokenizer([x_ + y_ for x_, y_ in zip(x, y)], return_tensors='pt', padding=True)
+    tokenized_y = tokenizer(y, return_tensors='pt', padding=True)
 
-    # combined_sequences['labels'] = torch.full_like(combined_sequences['attention_mask'], fill_value=-100)
-    # len_seq = combined_sequences['attention_mask'].sum(1)
-    # len_y = tokenizer_y['attention_mask'].sum(1)
-    # unmasked_token_y = tokenizer_y['input_ids'][tokenizer_y['attention_mask']]
+    combined_sequences['labels'] = torch.full_like(combined_sequences['attention_mask'], fill_value=-100)
+    len_xy = combined_sequences['attention_mask'].sum(1)
+    len_y = tokenized_y['attention_mask'].sum(1)
     
-    # for idx, tokenized_label in enumerate(combined_sequences['labels']):
-    #     tokenized_label[len_seq[idx]: len_seq[idx] + len_y[idx]] = unmasked_token_y[idx]
+    for idx, tokenized_label in enumerate(combined_sequences['labels']):
+        tokenized_label[len_xy[idx] - len_y[idx]: len_xy[idx]] = tokenized_y['input_ids'][idx, :len_y[idx]]
 
     # assert False, "Complete for Q2.2e"
     return combined_sequences
