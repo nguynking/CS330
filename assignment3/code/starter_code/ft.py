@@ -421,7 +421,22 @@ def ft_gpt2(model, tok, x, y, mode, dataset, batch_size=8, grad_accum=8):
         # Note: the ** operator will unpack a dictionary into keyword arguments to a function (such as your model)
 
         # YOUR CODE HERE, complete for Q2.2f
-        assert False, "Complete for Q2.2f"
+        batch_x = [x[i] for i in batch_idxs]
+        batch_y = [y[i] for i in batch_idxs]
+        tokenized_batch = tokenize_gpt2_batch(tok, batch_x, batch_y)
+
+        if step % grad_accum == 0:
+            optimizer.zero_grad()
+        outputs = model(**tokenized_batch, use_cache=False)
+        logits = outputs.logits
+        labels = tokenized_batch['labels']
+        loss = get_loss(logits, labels)
+        assert loss == nn.functional.cross_entropy(logits, labels, ignore_index=-100)
+        loss /= grad_accum
+        loss.backward()
+        if (step + 1) % grad_accum == 0:
+            optimizer.step()
+        # assert False, "Complete for Q2.2f"
         # END YOUR CODE
 
         if step % (grad_accum * 5) == 0:
