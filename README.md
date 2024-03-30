@@ -1,6 +1,4 @@
-# CS330: Deep Multi-Task and Meta Learning - Stanford/Fall 2023
-
-![image](https://github.com/nguynking/cs330/assets/110026135/de2a37b4-a0d0-44e3-b163-e872183c9600)
+# CS330: Deep Multi-Task and Meta Learning, Fall 2023 - Stanford
 
 ## Overview
 
